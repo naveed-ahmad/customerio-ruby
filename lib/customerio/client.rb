@@ -4,7 +4,9 @@ require 'json'
 module Customerio
   class Client
     include HTTParty
-    base_uri 'https://track.customer.io'
+    API_VERSION  = 'v1'.freeze
+    base_uri "https://track.customer.io/api/#{API_VERSION}/"
+
 
     class MissingIdAttributeError < RuntimeError; end
     class InvalidResponse < RuntimeError; end
@@ -20,6 +22,12 @@ module Customerio
 
     def delete(customer_id)
       verify_response(self.class.delete(customer_path(customer_id), options))
+    end
+
+    def customers(options = {})
+      options.delete_if { |k, v| v.nil? || v.empty? }
+
+      self.class.get 'customers', query: options
     end
 
     def track(*args)
@@ -57,7 +65,7 @@ module Customerio
     end
 
     def create_anonymous_event(event_name, attributes = {})
-      create_event("/api/v1/events", event_name, attributes)
+      create_event("events", event_name, attributes)
     end
 
     def create_event(url, event_name, attributes = {})
@@ -67,7 +75,7 @@ module Customerio
     end
 
     def customer_path(id)
-      "/api/v1/customers/#{id}"
+      "customers/#{id}"
     end
 
     def valid_timestamp?(timestamp)
